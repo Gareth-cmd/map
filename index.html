@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Cheshire East Historical Map</title>
+
+  <!-- Viewport meta for mobile responsiveness -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Leaflet CSS (no integrity/crossorigin) -->
+  <link 
+    rel="stylesheet" 
+    href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"
+  >
+
+  <!-- Historical-style font -->
+  <link 
+    href="https://fonts.googleapis.com/css2?family=IM+Fell+English&display=swap" 
+    rel="stylesheet"
+  >
+
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: 'IM Fell English', serif;
+      background-color: #000; /* Black background for contrast */
+      color: #fff;
+    }
+
+    #map {
+      width: 100%;
+      height: 100%;
+      position: relative;
+    }
+
+    /* Logo in the top-left corner */
+    .logo-container {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      z-index: 9999;
+      background-color: rgba(0, 0, 0, 0.5);
+      padding: 5px;
+      border-radius: 8px;
+    }
+    /* Larger logo */
+    .logo-container img {
+      max-width: 240px;
+      height: auto;
+      display: block;
+    }
+
+    /* Legend in the bottom-right corner */
+    .legend {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      z-index: 9999;
+      background-color: rgba(255, 255, 255, 0.8);
+      padding: 10px;
+      border: 2px solid #000;
+      border-radius: 5px;
+      color: #000;
+      max-width: 220px;
+    }
+    .legend h4 {
+      margin: 0 0 5px;
+      font-weight: bold;
+    }
+    .legend .item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 5px;
+    }
+    .legend .item i {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      margin-right: 8px;
+    }
+    /* Red line for Roman roads */
+    .legend .red-line i {
+      background-color: red;
+      border: 2px solid #000;
+      border-radius: 2px;
+    }
+    /* Magenta circle for battlefields/forts */
+    .legend .magenta-circle i {
+      background-color: magenta;
+      border: 2px solid #000;
+      border-radius: 50%;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Logo Container -->
+  <div class="logo-container">
+    <!-- Make sure this exact file is in the same folder -->
+    <img src="cheshire-east-detecting-club-logo.png" alt="Cheshire East Detecting Club Logo">
+  </div>
+
+  <!-- Map Container -->
+  <div id="map"></div>
+
+  <!-- Legend -->
+  <div class="legend">
+    <h4>Map Legend</h4>
+    <div class="item red-line">
+      <i></i> Roman Road (Bright Red)
+    </div>
+    <div class="item magenta-circle">
+      <i></i> Battlefield / Fort (Magenta Circle)
+    </div>
+  </div>
+
+  <!-- Leaflet JS (no integrity/crossorigin) -->
+  <script 
+    src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"
+  ></script>
+
+  <script>
+    /***************************************************
+     * 1. Initialize the Map
+     ***************************************************/
+    const map = L.map('map').setView([53.2, -2.4], 8);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors',
+      maxZoom: 19
+    }).addTo(map);
+
+    /***************************************************
+     * 2. Roman Roads (Red Polylines) w/ Period/Info
+     ***************************************************/
+    const romanRoadsData = [
+      {
+        name: "Chester–Manchester (Segment A)",
+        date: "c. 1st–2nd century AD",
+        coordinates: [
+          [53.191, -2.891],
+          [53.223, -2.783],
+          [53.257, -2.733],
+          [53.274, -2.651],
+          [53.271, -2.615],
+          [53.259, -2.522]
+        ],
+        info: "Known as King Street, linking Deva (Chester) to Northwich."
+      },
+      {
+        name: "Chester–Manchester (Segment B)",
+        date: "c. 1st–2nd century AD",
+        coordinates: [
+          [53.259, -2.522],
+          [53.309, -2.425],
+          [53.366, -2.322],
+          [53.390, -2.300],
+          [53.444, -2.276]
+        ],
+        info: "Continues King Street from Northwich toward Mamucium (Manchester)."
+      },
+      {
+        name: "Middlewich to Chesterton",
+        date: "c. 2nd century AD",
+        coordinates: [
+          [53.190, -2.444],
+          [53.170, -2.390],
+          [53.122, -2.315],
+          [53.038, -2.250]
+        ],
+        info: "Southeast route connecting salt towns in Salinae (Middlewich) to Staffordshire."
+      },
+      {
+        name: "Middlewich to Buxton",
+        date: "c. 2nd century AD",
+        coordinates: [
+          [53.190, -2.444],
+          [53.210, -2.360],
+          [53.261, -2.188],
+          [53.256, -1.915],
+          [53.254, -1.913]
+        ],
+        info: "Eastern route (partly speculative) linking Salinae to Aquae Arnemetiae (Buxton)."
+      },
+      {
+        name: "Watling Street (Cheshire Segment)",
+        date: "c. 1st century AD",
+        coordinates: [
+          [53.036, -2.648],
+          [52.999, -2.581],
+          [52.952, -2.508]
+        ],
+        info: "Major Roman road from Dover to Wroxeter, crossing south Cheshire."
+      },
+      {
+        name: "Chester to Whitchurch",
+        date: "c. 1st century AD",
+        coordinates: [
+          [53.191, -2.891],
+          [53.111, -2.748],
+          [53.032, -2.681]
+        ],
+        info: "Southern route linking Chester (Deva) with Shropshire region."
+      }
+    ];
+
+    // Draw each road as a bright red polyline with a popup
+    romanRoadsData.forEach(road => {
+      const popupHtml = `
+        <div style="max-width:200px;">
+          <h3 style="margin:0;">${road.name}</h3>
+          <p style="margin:0;"><b>Period:</b> ${road.date}</p>
+          <p style="margin:0;">${road.info}</p>
+        </div>
+      `;
+      L.polyline(road.coordinates, {
+        color: 'red',
+        weight: 4
+      })
+      .bindPopup(popupHtml)
+      .addTo(map);
+    });
+
+    /***************************************************
+     * 3. Battlefields & Forts (Magenta Circles)
+     *    With Radial Offsets for Overlapping Sites
+     ***************************************************/
+
+    const rawSitesData = [
+      {
+        name: "Battle of Nantwich",
+        date: "25 January 1644",
+        center: [53.067, -2.520],
+        description: "English Civil War. Parliamentarian victory lifting the Siege of Nantwich.",
+        radius: 800
+      },
+      {
+        name: "First Battle of Middlewich",
+        date: "13 March 1642",
+        center: [53.190, -2.444],
+        description: "English Civil War skirmish between Royalists & Parliamentarians.",
+        radius: 600
+      },
+      {
+        name: "Second Battle of Middlewich",
+        date: "26 December 1643",
+        center: [53.190, -2.444],
+        description: "Another engagement near Middlewich, leading to Parliamentarian success.",
+        radius: 600
+      },
+      {
+        name: "Fort at Middlewich (Salinae)",
+        date: "Roman Era (~1st–4th century)",
+        center: [53.190, -2.444],
+        description: "Roman fort near major salt production center.",
+        radius: 400
+      },
+      {
+        name: "Fort at Northwich (Condate)",
+        date: "Roman Era (~1st–4th century)",
+        center: [53.259, -2.515],
+        description: "Roman fort controlling local salt resources. Possibly minor skirmishes.",
+        radius: 400
+      },
+      {
+        name: "Battle of Blore Heath",
+        date: "23 September 1459",
+        center: [52.922, -2.376],
+        description: "Wars of the Roses. Yorkist victory over Lancastrians near the Staffordshire border.",
+        radius: 800
+      }
+      // You can add more battles here if needed
+    ];
+
+    // Group sites by their base coordinate
+    const coordinateGroups = {};
+    rawSitesData.forEach(site => {
+      const key = site.center.join(",");
+      if (!coordinateGroups[key]) {
+        coordinateGroups[key] = [];
+      }
+      coordinateGroups[key].push(site);
+    });
+
+    // Function to distribute multiple circles around a center if they share the same coords
+    function distributeAroundCenter(sites, center) {
+      // A small radius in lat/lng degrees for offset
+      // ~0.002 is ~200–300m offset depending on latitude
+      const RADIUS = 0.002;
+      const total = sites.length;
+      const [latBase, lngBase] = center;
+
+      return sites.map((site, index) => {
+        const angle = (2 * Math.PI * index) / total;
+        const latOffset = RADIUS * Math.cos(angle);
+        const lngOffset = RADIUS * Math.sin(angle);
+        return {
+          ...site,
+          coordinates: [latBase + latOffset, lngBase + lngOffset]
+        };
+      });
+    }
+
+    // Prepare final site data with offset coords
+    const finalSitesData = [];
+    for (const key in coordinateGroups) {
+      const group = coordinateGroups[key];
+      if (group.length > 1) {
+        // Distribute around the center
+        const [lat, lng] = group[0].center;
+        const distributed = distributeAroundCenter(group, [lat, lng]);
+        finalSitesData.push(...distributed);
+      } else {
+        // Only one site => no offset needed
+        finalSitesData.push({
+          ...group[0],
+          coordinates: group[0].center
+        });
+      }
+    }
+
+    // Create circles for each site
+    finalSitesData.forEach(site => {
+      const circle = L.circle(site.coordinates, {
+        radius: site.radius,
+        color: 'magenta',
+        fillColor: 'magenta',
+        fillOpacity: 0.3
+      }).addTo(map);
+
+      const popupHtml = `
+        <div style="max-width:200px;">
+          <h3 style="margin:0;">${site.name}</h3>
+          <p style="margin:0;"><b>Date/Period:</b> ${site.date}</p>
+          <p style="margin:0;">${site.description}</p>
+        </div>
+      `;
+      circle.bindPopup(popupHtml);
+    });
+  </script>
+</body>
+</html>
